@@ -14,6 +14,15 @@ public class GameManager : MonoBehaviour
     private GameObject target;
     private GameObject enemy;
 
+    private AudioSource audioSource;
+    public AudioClip meow;
+    public AudioClip growl;
+
+    void Start()
+    {
+        audioSource = GetComponent<AudioSource>();
+    }
+
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Alpha0))
@@ -50,6 +59,14 @@ public class GameManager : MonoBehaviour
         Vector2 randomPosition1 = GetRandomPositionWithinBounds();
         Vector2 randomPosition2 = GetRandomPositionWithinBounds();
 
+        if (behavior == SteeringBehaviours.Behavior.Flee)
+        {
+            randomPosition2 = randomPosition1 + (Random.insideUnitCircle * 2f);
+            randomPosition2 = ClampPositionWithinBounds(randomPosition2);
+            PlayDogSound();
+        }
+        
+
         character = Instantiate(characterPrefab, randomPosition1, Quaternion.identity);
 
         switch (behavior)
@@ -69,11 +86,29 @@ public class GameManager : MonoBehaviour
             case SteeringBehaviours.Behavior.Avoid:
                 enemy = Instantiate(enemyPrefab, randomPosition2, Quaternion.identity);
                 character.GetComponent<SteeringBehaviours>().enemy = enemy.transform;
+                PlayDogSound();
                 break;
         }
 
         character.GetComponent<SteeringBehaviours>().currentBehavior = behavior;
         character.GetComponent<SteeringBehaviours>().enabled = true;
+        PlayCatSound();
+    }
+
+    void PlayCatSound()
+    {
+        if (audioSource != null && meow != null)
+        {
+            audioSource.PlayOneShot(meow);
+        }
+    }
+
+    void PlayDogSound()
+    {
+        if (audioSource != null && growl != null)
+        {
+            audioSource.PlayOneShot(growl);
+        }
     }
 
     void DestroyTargets()
@@ -84,12 +119,22 @@ public class GameManager : MonoBehaviour
 
     Vector2 GetRandomPositionWithinBounds()
     {
-        Vector3 screenBottomLeft = mainCamera.ScreenToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane));
-        Vector3 screenTopRight = mainCamera.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, mainCamera.nearClipPlane));
-
+        Vector3 screenBottomLeft = mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane));
+        Vector3 screenTopRight = mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)); // screen Screen.width Screen.height
         float randomX = Random.Range(screenBottomLeft.x, screenTopRight.x);
         float randomY = Random.Range(screenBottomLeft.y, screenTopRight.y);
 
         return new Vector2(randomX, randomY);
+    }
+
+    Vector2 ClampPositionWithinBounds(Vector2 position)
+    {
+        Vector3 screenBottomLeft = mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane));
+        Vector3 screenTopRight = mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane));
+
+        float clampedX = Mathf.Clamp(position.x, screenBottomLeft.x, screenTopRight.x);
+        float clampedY = Mathf.Clamp(position.y, screenBottomLeft.y, screenTopRight.y);
+
+        return new Vector2(clampedX, clampedY);
     }
 }

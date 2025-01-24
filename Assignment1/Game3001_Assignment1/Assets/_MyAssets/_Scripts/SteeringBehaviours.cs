@@ -10,8 +10,8 @@ public class SteeringBehaviours : MonoBehaviour
     public Transform target;
     public Transform enemy;
     public float speed = 5f;
-    public float arrivalRadius = 3f;
-    public float avoidDistance = 3f;
+    public float arrivalRadius = 1f;
+    public float avoidDistance = 1f;
 
     void Update()
     {
@@ -47,16 +47,35 @@ public class SteeringBehaviours : MonoBehaviour
         Vector2 newVelocity = direction * speed;
         transform.position += (Vector3)newVelocity * Time.deltaTime;
 
+        ClampPositionWithinBounds();
+
         RotateTowards(direction);
     }
 
     void Arrive(Transform target)
     {
+        //Vector2 direction = (target.position - transform.position).normalized;
+        //float distance = Vector2.Distance(target.position, transform.position);
+        //float desiredSpeed = (distance < arrivalRadius) ? speed * (distance / arrivalRadius) : speed;
+        //Vector2 newVelocity = direction * desiredSpeed;
+        //transform.position += (Vector3)newVelocity * Time.deltaTime;
         Vector2 direction = (target.position - transform.position).normalized;
         float distance = Vector2.Distance(target.position, transform.position);
-        float desiredSpeed = (distance < arrivalRadius) ? speed * (distance / arrivalRadius) : speed;
-        Vector2 newVelocity = direction * desiredSpeed;
-        transform.position += (Vector3)newVelocity * Time.deltaTime;
+
+        float stoppingRadius = 1f;
+
+        //float desiredSpeed = (distance < arrivalRadius) ? speed * (distance - arrivalRadius) : speed;
+
+        if (distance > stoppingRadius)
+        {
+            float desiredSpeed = Mathf.Min(speed, (speed * (distance / arrivalRadius)));
+            Vector2 newVelocity = direction * desiredSpeed;
+            transform.position += (Vector3)newVelocity * Time.deltaTime;
+        }
+        else
+        {
+            transform.position = target.position - (Vector3)(direction * stoppingRadius);
+        }
 
         RotateTowards(direction);
     }
@@ -78,5 +97,15 @@ public class SteeringBehaviours : MonoBehaviour
     {
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
         transform.rotation = Quaternion.Euler(new Vector3(0, 0, angle));
+    }
+
+    void ClampPositionWithinBounds()
+    {
+        Vector3 screenBottomLeft = Camera.main.ViewportToWorldPoint(new Vector3(0, 0, Camera.main.nearClipPlane));
+        Vector3 screenTopRight = Camera.main.ViewportToWorldPoint(new Vector3(1, 1, Camera.main.nearClipPlane));
+        float clampedX = Mathf.Clamp(transform.position.x, screenBottomLeft.x, screenTopRight.x);
+        float clampedY = Mathf.Clamp(transform.position.y, screenBottomLeft.y, screenTopRight.y);
+
+        transform.position = new Vector3(clampedX, clampedY, transform.position.z);
     }
 }
