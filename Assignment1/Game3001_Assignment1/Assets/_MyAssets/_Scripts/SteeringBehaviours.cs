@@ -54,17 +54,11 @@ public class SteeringBehaviours : MonoBehaviour
 
     void Arrive(Transform target)
     {
-        //Vector2 direction = (target.position - transform.position).normalized;
-        //float distance = Vector2.Distance(target.position, transform.position);
-        //float desiredSpeed = (distance < arrivalRadius) ? speed * (distance / arrivalRadius) : speed;
-        //Vector2 newVelocity = direction * desiredSpeed;
-        //transform.position += (Vector3)newVelocity * Time.deltaTime;
         Vector2 direction = (target.position - transform.position).normalized;
         float distance = Vector2.Distance(target.position, transform.position);
 
         float stoppingRadius = 1f;
 
-        //float desiredSpeed = (distance < arrivalRadius) ? speed * (distance - arrivalRadius) : speed;
 
         if (distance > stoppingRadius)
         {
@@ -82,21 +76,50 @@ public class SteeringBehaviours : MonoBehaviour
 
     void Avoid()
     {
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, transform.right, avoidDistance);
 
-        if (hit.collider != null)
+        float avoidanceRadius = 1f;
+        float avoidStrength = 2.5f;
+        float stoppingThreshold = 0.1f;
+
+        Vector2 avoidanceForce = Vector2.zero;
+
+        if (enemy != null)
         {
-            Vector2 avoidanceForce = Vector2.Reflect(transform.right, hit.normal) * speed;
-            transform.position += (Vector3)avoidanceForce * Time.deltaTime;
-
-            RotateTowards(avoidanceForce);
+            Vector2 directionToEnemy = (Vector2)enemy.position - (Vector2)transform.position;
+            if (directionToEnemy.magnitude < avoidanceRadius)
+            {
+                Vector2 perpendicularDirection = Vector2.Perpendicular(directionToEnemy).normalized;
+                avoidanceForce = perpendicularDirection * avoidStrength;
+            }
         }
+
+        Vector2 directionToTarget = (target.position - transform.position).normalized;
+        Vector2 desiredVelocity = (directionToTarget * speed) + avoidanceForce;
+        desiredVelocity = Vector2.ClampMagnitude(desiredVelocity, speed);
+
+        if (!float.IsNaN(desiredVelocity.x) && !float.IsNaN(desiredVelocity.y))
+        {
+            if (Vector2.Distance(transform.position, target.position) > stoppingThreshold)
+            {
+                transform.position += (Vector3)desiredVelocity * Time.deltaTime;
+            }
+            else
+            {
+                transform.position = target.position;
+            }
+
+            RotateTowards(desiredVelocity);
+        }
+
     }
 
     void RotateTowards(Vector2 direction)
     {
-        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-        transform.rotation = Quaternion.Euler(new Vector3(0, 0, angle));
+        if (direction != Vector2.zero)
+        {
+            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            transform.rotation = Quaternion.Euler(new Vector3(0, 0, angle));
+        }
     }
 
     void ClampPositionWithinBounds()

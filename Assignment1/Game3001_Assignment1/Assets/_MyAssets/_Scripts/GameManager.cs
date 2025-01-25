@@ -65,7 +65,6 @@ public class GameManager : MonoBehaviour
             randomPosition2 = ClampPositionWithinBounds(randomPosition2);
             PlayDogSound();
         }
-        
 
         character = Instantiate(characterPrefab, randomPosition1, Quaternion.identity);
 
@@ -84,7 +83,17 @@ public class GameManager : MonoBehaviour
                 character.GetComponent<SteeringBehaviours>().target = target.transform;
                 break;
             case SteeringBehaviours.Behavior.Avoid:
-                enemy = Instantiate(enemyPrefab, randomPosition2, Quaternion.identity);
+                Vector2 enemyPosition = randomPosition1;
+                Vector2 characterPosition = randomPosition1 - new Vector2(10, 0);
+                Vector2 targetPosition = randomPosition1 + new Vector2(3, 0);
+
+                characterPosition = ClampPositionWithinBounds(characterPosition);
+                targetPosition = ClampPositionWithinBounds(targetPosition);
+
+                if (enemy != null) Destroy(enemy);
+                enemy = Instantiate(enemyPrefab, enemyPosition, Quaternion.identity);
+                target = Instantiate(targetPrefab, targetPosition, Quaternion.identity);
+                character.GetComponent<SteeringBehaviours>().target = target.transform;
                 character.GetComponent<SteeringBehaviours>().enemy = enemy.transform;
                 PlayDogSound();
                 break;
@@ -120,7 +129,7 @@ public class GameManager : MonoBehaviour
     Vector2 GetRandomPositionWithinBounds()
     {
         Vector3 screenBottomLeft = mainCamera.ViewportToWorldPoint(new Vector3(0, 0, mainCamera.nearClipPlane));
-        Vector3 screenTopRight = mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)); // screen Screen.width Screen.height
+        Vector3 screenTopRight = mainCamera.ViewportToWorldPoint(new Vector3(1, 1, mainCamera.nearClipPlane)); 
         float randomX = Random.Range(screenBottomLeft.x, screenTopRight.x);
         float randomY = Random.Range(screenBottomLeft.y, screenTopRight.y);
 
