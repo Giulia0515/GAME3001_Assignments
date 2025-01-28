@@ -66,26 +66,28 @@ public class GameManager : MonoBehaviour
             PlayDogSound();
         }
 
-        character = Instantiate(characterPrefab, randomPosition1, Quaternion.identity);
 
         switch (behavior)
         {
             case SteeringBehaviours.Behavior.Seek:
+                character = Instantiate(characterPrefab, randomPosition1, Quaternion.identity);
                 target = Instantiate(targetPrefab, randomPosition2, Quaternion.identity);
                 character.GetComponent<SteeringBehaviours>().target = target.transform;
                 break;
             case SteeringBehaviours.Behavior.Flee:
+                character = Instantiate(characterPrefab, randomPosition1, Quaternion.identity);
                 enemy = Instantiate(enemyPrefab, randomPosition2, Quaternion.identity);
                 character.GetComponent<SteeringBehaviours>().enemy = enemy.transform;
                 break;
             case SteeringBehaviours.Behavior.Arrive:
+                character = Instantiate(characterPrefab, randomPosition1, Quaternion.identity);
                 target = Instantiate(targetPrefab, randomPosition2, Quaternion.identity);
                 character.GetComponent<SteeringBehaviours>().target = target.transform;
                 break;
             case SteeringBehaviours.Behavior.Avoid:
                 Vector2 enemyPosition = randomPosition1;
-                Vector2 characterPosition = randomPosition1 - new Vector2(10, 0);
-                Vector2 targetPosition = randomPosition1 + new Vector2(3, 0);
+                Vector2 characterPosition = randomPosition1 - new Vector2(5, 0);
+                Vector2 targetPosition = randomPosition1 + new Vector2(4, 0);
 
                 characterPosition = ClampPositionWithinBounds(characterPosition);
                 targetPosition = ClampPositionWithinBounds(targetPosition);
@@ -93,6 +95,7 @@ public class GameManager : MonoBehaviour
                 if (enemy != null) Destroy(enemy);
                 enemy = Instantiate(enemyPrefab, enemyPosition, Quaternion.identity);
                 target = Instantiate(targetPrefab, targetPosition, Quaternion.identity);
+                character = Instantiate(characterPrefab, characterPosition, Quaternion.identity);
                 character.GetComponent<SteeringBehaviours>().target = target.transform;
                 character.GetComponent<SteeringBehaviours>().enemy = enemy.transform;
                 PlayDogSound();

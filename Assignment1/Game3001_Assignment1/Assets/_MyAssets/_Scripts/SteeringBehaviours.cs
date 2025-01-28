@@ -77,7 +77,7 @@ public class SteeringBehaviours : MonoBehaviour
     void Avoid()
     {
 
-        float avoidanceRadius = 1f;
+        float avoidanceRadius = 3f;
         float avoidStrength = 2.5f;
         float stoppingThreshold = 0.1f;
 
