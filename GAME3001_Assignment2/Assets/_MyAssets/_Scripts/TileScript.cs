@@ -6,10 +6,10 @@ public class TileScript : MonoBehaviour
 {
     [SerializeField] private GameObject[] neighbourTiles;
     [SerializeField] private Color original;
-    public TilePanelScript tilePanel; // used only for UI
+    public TilePanelScript tilePanel;
     public TileStatus status = TileStatus.UNVISITED;
     public float cost = 999.9f;
-    
+
     public void SetNeighbourTile(int index, GameObject tile)
     {
         neighbourTiles[index] = tile;
@@ -21,11 +21,6 @@ public class TileScript : MonoBehaviour
             original = color;
         gameObject.GetComponent<SpriteRenderer>().color = color;
     }
-
-    //public void UpdateText()
-    //{
-    //    SetStatus(status);
-    //}
 
     public void SetStatus(TileStatus stat)
     {

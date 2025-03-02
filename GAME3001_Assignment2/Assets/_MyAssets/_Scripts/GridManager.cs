@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public enum TileStatus
 {
@@ -23,14 +24,18 @@ public enum NeighbourTile
 
 public class GridManager : MonoBehaviour
 {
-    [SerializeField] 
+    [SerializeField]
     private GameObject tilePrefab;
     [SerializeField]
     private GameObject tilePanelPrefab;
     [SerializeField]
     private GameObject tilePanelParent;
     [SerializeField]
-    private GameObject minePrefab;
+    private GameObject obstaclePrefab;
+    [SerializeField]
+    private GameObject planePrefab;
+    [SerializeField]
+    private GameObject goalPrefab;
     [SerializeField]
     private Color[] colors;
 
@@ -42,7 +47,7 @@ public class GridManager : MonoBehaviour
     private GameObject[,] grid;
     private int rows = 12;
     private int columns = 16;
-    private List<GameObject> mines = new List<GameObject>();
+    private List<GameObject> obstacles = new List<GameObject>();
 
 
     public static GridManager Instance { get; private set; } // Static object of the class.
@@ -62,41 +67,50 @@ public class GridManager : MonoBehaviour
 
     private void Initialize()
     {
-        // Fill in for Lab 4 Part 1.
         BuildGrid();
         ConnectGrid();
     }
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.G))
+        if (Input.GetKeyDown(KeyCode.H))
         {
             foreach (Transform child in transform)
             {
                 child.gameObject.SetActive(!child.gameObject.activeSelf); // toggle tiles
             }
             tilePanelParent.SetActive(!tilePanelParent.gameObject.activeSelf);
-        }
 
-        if (Input.GetKeyDown(KeyCode.M))
-        {
-            Vector2 gridPosition = GetGridPosition(Camera.main.ScreenToWorldPoint(Input.mousePosition));
-            GameObject mineInst = Instantiate(minePrefab, new Vector3(gridPosition.x, gridPosition.y, 0f), Quaternion.identity);
-            mineInst.GetComponent<NavigationObject>().SetGridIndex();
-            Vector2 mineIndex = mineInst.GetComponent<NavigationObject>().GetGridIndex();
-            //mineInst.GetComponent<NavigationObject>().SetGridIndex();
-            grid[(int)mineIndex.y, (int)mineIndex.x].GetComponent<TileScript>().SetStatus(TileStatus.IMPASSABLE);
-            mines.Add(mineInst);
-        }
-        if (Input.GetKeyDown(KeyCode.C))
-        {
-            foreach (GameObject mine in mines)
+            if (Input.GetKeyDown(KeyCode.O))
             {
-                Vector2 mineIndex = mine.GetComponent<NavigationObject>().GetGridIndex();
-                grid[(int)mineIndex.y, (int)mineIndex.x].GetComponent<TileScript>().SetStatus(TileStatus.UNVISITED);
-                Destroy(mine);
+                Vector2 gridPosition = GetGridPosition(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+                GameObject obstacleInst = Instantiate(obstaclePrefab, new Vector3(gridPosition.x, gridPosition.y, 0f), Quaternion.identity);
+                obstacleInst.GetComponent<GridIndexScript>().SetGridIndex();
+                Vector2 obstacleIndex = obstacleInst.GetComponent<GridIndexScript>().GetGridIndex();
+                grid[(int)obstacleIndex.y, (int)obstacleIndex.x].GetComponent<TileScript>().SetStatus(TileStatus.IMPASSABLE);
+                obstacles.Add(obstacleInst);
             }
-            mines.Clear();
+
+            if (Input.GetMouseButtonDown(0))
+            {
+                Vector2 gridPosition = GetGridPosition(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+                GameObject planeInst = Instantiate(planePrefab, new Vector3(gridPosition.x, gridPosition.y, 0f), Quaternion.identity);
+                Vector2 planeIndex = planeInst.GetComponent<GridIndexScript>().GetGridIndex();
+                grid[(int)planeIndex.y, (int)planeIndex.x].GetComponent<TileScript>().SetStatus(TileStatus.START);
+            }
+
+            if (Input.GetMouseButtonDown(1))
+            {
+                Vector2 gridPosition = GetGridPosition(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+                GameObject goalInst = Instantiate(goalPrefab, new Vector3(gridPosition.x, gridPosition.y, 0f), Quaternion.identity);
+                Vector2 goalIndex = goalInst.GetComponent<GridIndexScript>().GetGridIndex();
+                grid[(int)goalIndex.y, (int)goalIndex.x].GetComponent<TileScript>().SetStatus(TileStatus.GOAL);
+                SetTileCost(goalIndex);
+            }
+        }
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            SceneManager.LoadScene(1);
         }
     }
 
@@ -113,7 +127,7 @@ public class GridManager : MonoBehaviour
                 GameObject tileInst = GameObject.Instantiate(tilePrefab, new Vector3(colPos, rowPos, 0f), Quaternion.identity);
                 TileScript tileScript = tileInst.GetComponent<TileScript>();
                 tileScript.SetColor(colors[System.Convert.ToInt32((count++ % 2 == 0))]);
-               // tileInst.GetComponent<TileScript>().SetColor(colors[System.Convert.ToInt32((count++ % 2 == 0))]);
+                // tileInst.GetComponent<TileScript>().SetColor(colors[System.Convert.ToInt32((count++ % 2 == 0))]);
                 tileInst.transform.parent = transform;
                 grid[row, col] = tileInst;
                 //Instantiate a new tilepanel and link to the tile instance.
@@ -127,17 +141,8 @@ public class GridManager : MonoBehaviour
             }
             count--;
         }
-        // Set tile under the ship to start
-        GameObject ship = GameObject.FindGameObjectWithTag("Ship");
-        Vector2 shipIndices = ship.GetComponent<NavigationObject>().GetGridIndex();
-        grid[(int)shipIndices.y, (int)shipIndices.x].GetComponent<TileScript>().SetStatus(TileStatus.START);
-        // set goal
-        GameObject planet = GameObject.FindGameObjectWithTag("Planet");
-        Vector2 planetIndices = planet.GetComponent<NavigationObject>().GetGridIndex();
-        grid[(int)planetIndices.y, (int)planetIndices.x].GetComponent<TileScript>().SetStatus(TileStatus.GOAL);
 
-        SetTileCost(planetIndices);
-
+        //SetTileCost(goalIndex);
     }
 
     private void ConnectGrid()
@@ -169,8 +174,6 @@ public class GridManager : MonoBehaviour
 
     public GameObject[,] GetGrid()
     {
-        // Fix for Lab 4 Part 1.
-        //
         return grid;
     }
 
@@ -213,3 +216,4 @@ public class GridManager : MonoBehaviour
         }
     }
 }
+
