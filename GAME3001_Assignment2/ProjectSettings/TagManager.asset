@@ -3,7 +3,11 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - Target
+  - Mines
+  - Ship
+  - Planet
   layers:
   - Default
   - TransparentFX
